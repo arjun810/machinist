@@ -45,6 +45,14 @@ module Machinist
           yield object if block_given?
         end
       end
+
+      def blueprint_attributes(attributes = {})
+        raise "No blueprint for class #{self}" if @blueprint.nil?
+        lathe = Lathe.new(self, attributes)
+        lathe.instance_eval(&@blueprint)
+        return lathe.blueprint_attributes
+      end
+
     end
   end
   
@@ -53,6 +61,7 @@ module Machinist
       @object = klass.new
       attributes.each {|key, value| @object.send("#{key}=", value) }
       @assigned_attributes = attributes.keys.map(&:to_sym)
+      @blueprint_attributes = attributes
     end
 
     # Undef a couple of methods that are common ActiveRecord attributes.
@@ -61,6 +70,7 @@ module Machinist
     undef_method :type
     
     attr_reader :object
+    attr_reader :blueprint_attributes
 
     def method_missing(symbol, *args, &block)
       if @assigned_attributes.include?(symbol)
@@ -75,6 +85,7 @@ module Machinist
         end
         @object.send("#{symbol}=", value)
         @assigned_attributes << symbol
+        @blueprint_attributes.store(symbol, value)
       end
     end
   end

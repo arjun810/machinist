@@ -173,4 +173,32 @@ describe Machinist do
       comment.should  be_saved
     end
   end
+
+  describe "blueprint_attributes method" do
+      it "should return the attributes set in the blueprint" do
+        Post.blueprint { 
+        title   "blah"
+        }
+        Comment.blueprint { 
+        post
+        }
+        attrs = Post.blueprint_attributes
+        attrs.should_not be_nil
+        attrs[:title].should_not be_nil
+        attrs[:title].should == "blah"
+      end
+
+      it "should return overridden attributes" do
+        Post.blueprint { 
+        title   "blah"
+        }
+        Comment.blueprint { 
+        post
+        }
+        attrs = Post.blueprint_attributes(:title => "frog")
+        attrs.should_not be_nil
+        attrs[:title].should_not be_nil
+        attrs[:title].should == "frog"
+      end
+  end
 end
